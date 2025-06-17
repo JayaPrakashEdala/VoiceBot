@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Interview Voicebot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1e1e2f;
+      color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #start-btn {
+      padding: 15px 30px;
+      font-size: 1rem;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+
+    #start-btn:hover {
+      background: #3730a3;
+    }
+
+    #response {
+      margin-top: 30px;
+      font-size: 1.1rem;
+      max-width: 600px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      line-height: 1.5;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    .typing {
+      animation: blink 1s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎙️ Ask the AI Voicebot</h1>
+  <button id="start-btn">🎤 Tap to Speak</button>
+  <div id="response">Ask me something about my skills, growth, or experiences!</div>
+	<div style="margin-top: 40px; padding: 10px; color: #555; font-size: 14px; text-align: center;">
+  <strong>Note:</strong> This voice bot uses OpenAI's GPT model and custom responses for only certain questions.</div>
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const responseEl = document.getElementById('response');
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      responseEl.innerHTML = `<span class="typing">💭 Thinking...</span>`;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: transcript })
+        });
+
+        const data = await res.json();
+        responseEl.textContent = `🤖 ${data.reply}`;
+
+        const utterance = new SpeechSynthesisUtterance(data.reply);
+        speechSynthesis.speak(utterance);
+      } catch (err) {
+        responseEl.textContent = "❌ Oops, there was an error.";
+      }
+    };
+
+    startBtn.onclick = () => {
+      recognition.start();
+    };
+  </script>
+</body>
+</html>
